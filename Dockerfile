@@ -1,9 +1,11 @@
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 MAINTAINER jdoliner@pachyderm.io
 
 RUN \
   apt-get update -yq && \
   apt-get install -yq --no-install-recommends \
+    apt-transport-https \
+    software-properties-common \
     build-essential \
     ca-certificates \
     cmake \
@@ -16,12 +18,20 @@ RUN \
   apt-get clean && \
   rm -rf /var/lib/apt
 RUN \
-  curl -fsSL https://get.docker.com/builds/Linux/x86_64/docker-1.12.1.tgz | tar -C /bin -xz docker/docker --strip-components=1 && \
-  chmod +x /bin/docker
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && \
+  apt-key fingerprint 0EBFCD88 
 RUN \
-  curl -sSL https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz | tar -C /usr/local -xz && \
-  mkdir -p /go/bin
-ENV PATH /go/bin:/usr/local/go/bin:$PATH
+  add-apt-repository "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+RUN \
+  apt-get update && \
+  apt-get install -yq --no-install-recommends \
+    docker-ce
+RUN \
+  add-apt-repository ppa:gophers/archive && \
+  apt update -yq && \
+  apt-get install -yq --no-install-recommends \
+  golang-1.8-go     
+ENV PATH /go/bin:/usr/lib/go-1.8/bin:$PATH
 ENV GOPATH /go
 ENV GO15VENDOREXPERIMENT 1
 RUN go get github.com/kisielk/errcheck github.com/golang/lint/golint
